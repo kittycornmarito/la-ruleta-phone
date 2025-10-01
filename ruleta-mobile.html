@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Ruleta Triple Concéntrica</title>
+  <style>
+    @import url('https://fonts.cdnfonts.com/css/casino');
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-height: 100vh;
+      background: radial-gradient(circle at center, #4e2a84, #2b0e4b);
+      color: white;
+      margin: 0;
+      padding: 10px;
+      overflow-x: hidden;
+      touch-action: manipulation;
+    }
+
+    h1 {
+      font-family: 'Casino', sans-serif;
+      font-size: clamp(1.5rem, 5vw, 2.5rem);
+      color: #ffeb3b;
+      text-shadow: 2px 2px 8px #000, 0 0 25px #ff4081, 0 0 5px #00e5ff;
+      margin: 10px 0 15px 0;
+      letter-spacing: 2px;
+      text-align: center;
+    }
+
+    .contenedor {
+      position: relative;
+      width: min(90vw, 400px);
+      height: min(90vw, 400px);
+      margin: 10px auto;
+    }
+
+    .ruleta {
+      border-radius: 50%;
+      border: 4px solid #222;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      transition: transform 4s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 20px rgba(255,255,255,0.4);
+    }
+
+    .ruleta1 { 
+      width: 100%; 
+      height: 100%; 
+      z-index: 1; 
+    }
+    .ruleta2 { 
+      width: 66.67%; 
+      height: 66.67%; 
+      z-index: 2; 
+      background: #fff; 
+    }
+    .ruleta3 { 
+      width: 33.33%; 
+      height: 33.33%; 
+      z-index: 3; 
+      background: #fff; 
+    }
+
+    .texto-segmento {
+      position: absolute;
+      transform-origin: center center;
+      font-size: clamp(8px, 2vw, 11px);
+      font-weight: bold;
+      color: #111;
+      text-shadow: 1px 1px 2px #fff;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .botones {
+      margin-top: 15px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      width: 100%;
+      max-width: 400px;
+      padding: 0 10px;
+    }
+
+    button {
+      padding: 12px 10px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #ff4081, #ff9100);
+      color: white;
+      font-size: clamp(12px, 3vw, 14px);
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      touch-action: manipulation;
+      white-space: nowrap;
+    }
+
+    button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+
+    .btn-girar-todo {
+      grid-column: 1 / -1;
+      font-size: clamp(14px, 3.5vw, 16px);
+    }
+
+    #resultadoModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      color: #000;
+      z-index: 9999;
+      text-align: center;
+      font-size: clamp(14px, 3vw, 18px);
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      padding: 20px 15px;
+      overflow-y: auto;
+    }
+
+    #resultadoModal.mostrar {
+      display: flex;
+    }
+
+    #resultadoModal h2 {
+      font-size: clamp(24px, 6vw, 32px);
+      margin: 10px 0;
+      color: #4e2a84;
+    }
+
+    #resultadoModal p {
+      font-size: clamp(14px, 3.5vw, 18px);
+      margin: 6px 0;
+      line-height: 1.4;
+    }
+
+    .small-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 12px 16px;
+      background: linear-gradient(145deg, #007bff, #00e5ff);
+      color: white;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: clamp(14px, 3.5vw, 16px);
+      font-weight: bold;
+      transition: transform 0.2s, box-shadow 0.2s;
+      touch-action: manipulation;
+    }
+
+    .small-btn:active {
+      transform: scale(0.95);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    .botones-resultado {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 15px;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .botones-resultado button {
+      width: 100%;
+    }
+
+    #imagenNoCompletado {
+      margin-top: 15px;
+      min-height: 50px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #imagenNoCompletado img {
+      max-width: 90%;
+      max-height: 250px;
+      margin-top: 15px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      transition: opacity 0.3s ease-in-out;
+      object-fit: contain;
+    }
+
+    .loading-image { opacity: 0.5; }
+    .error-message { 
+      color: #f44336; 
+      margin-top: 10px;
+      font-size: clamp(12px, 3vw, 14px);
+      padding: 10px;
+    }
+
+    /* Dropdown Historial */
+    .dropdown {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 2000;
+    }
+
+    .dropdown button {
+      background: linear-gradient(145deg, #673ab7, #512da8);
+      padding: 8px 12px;
+      font-size: clamp(12px, 3vw, 14px);
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background: #fff;
+      color: #000;
+      min-width: 250px;
+      max-width: 90vw;
+      max-height: 300px;
+      overflow-y: auto;
+      border-radius: 8px;
+      padding: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      margin-top: 5px;
+    }
+
+    .dropdown-content ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .dropdown-content li {
+      padding: 8px;
+      border-bottom: 1px solid #eee;
+      font-size: clamp(11px, 2.5vw, 13px);
+    }
+
+    /* Botón Instrucciones */
+    #btnHistorialImagenes {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: linear-gradient(145deg, #ff9800, #ff5722);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: clamp(12px, 3vw, 14px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      z-index: 2000;
+      touch-action: manipulation;
+    }
+
+    #historialImagenesModal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.95);
+      z-index: 3000;
+      text-align: center;
+      padding: 20px 15px;
+      overflow-y: auto;
+    }
+
+    #historialImagenesModal h2 {
+      color: white;
+      margin: 20px 0;
+      font-size: clamp(20px, 5vw, 28px);
+    }
+
+    #cerrarHistorialImagenes {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      font-size: 35px;
+      font-weight: bold;
+      color: white;
+      cursor: pointer;
+      z-index: 3001;
+      touch-action: manipulation;
+    }
+
+    .galeria {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      padding-top: 50px;
+    }
+
+    .galeria img {
+      width: 90%;
+      max-width: 350px;
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.5);
+      transition: transform 0.2s;
+    }
+
+    .galeria img:active {
+      transform: scale(0.98);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 480px) {
+      h1 {
+        margin-top: 5px;
+        margin-bottom: 10px;
+      }
+
+      .contenedor {
+        margin: 5px auto;
+      }
+
+      .botones {
+        gap: 8px;
+      }
+
+      button {
+        padding: 10px 8px;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .botones {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .btn-girar-todo {
+        grid-column: 1 / -1;
+      }
+
+      .galeria {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .galeria img {
+        width: 280px;
+      }
+
+      .botones-resultado {
+        flex-direction: row;
+        max-width: 600px;
+      }
+    }
+  </style>
+<script src="https://sites.super.myninja.ai/_assets/ninja-daytona-script.js"></script>
+</head>
+<body>
+  <h1>LA RULETA</h1>
+
+  <!-- Dropdown historial -->
+  <div class="dropdown" id="dropdownHistorial">
+    <button onclick="toggleDropdown()">Historial ▼</button>
+    <div class="dropdown-content">
+      <ul id="listaHistorial"></ul>
+    </div>
+  </div>
+
+  <!-- Botón Instrucciones -->
+  <button id="btnHistorialImagenes" type="button">📜 Instrucciones</button>
+
+  <!-- Modal Instrucciones -->
+  <div id="historialImagenesModal" role="dialog" aria-hidden="true">
+    <span id="cerrarHistorialImagenes" title="Cerrar">&times;</span>
+    <h2>Instrucciones</h2>
+    <div class="galeria">
+      <img src="imagn/1.png" alt="Imagen 1">
+      <img src="imagn/2.png" alt="Imagen 2">
+      <img src="imagn/3.png" alt="Imagen 3">
+    </div>
+  </div>
+
+  <!-- Roulette container -->
+  <div class="contenedor">
+    <div id="ruleta1" class="ruleta ruleta1"></div>
+    <div id="ruleta2" class="ruleta ruleta2"></div>
+    <div id="ruleta3" class="ruleta ruleta3"></div>
+  </div>
+
+  <!-- Control buttons -->
+  <div class="botones">
+    <button type="button" onclick="girarIndividual('ruleta1')">Girar Ruleta 1</button>
+    <button type="button" onclick="girarIndividual('ruleta2')">Girar Ruleta 2</button>
+    <button type="button" onclick="girarIndividual('ruleta3')">Girar Ruleta 3</button>
+    <button type="button" onclick="girarTodo()" class="btn-girar-todo">🎉 Girar Todo 🎉</button>
+  </div>
+
+  <!-- Results modal -->
+  <div id="resultadoModal" aria-hidden="true" role="dialog">
+    <h2 id="resultadoTitle">Resultados</h2>
+    <div id="resultadoTexto"></div>
+    <div id="temporizador"></div>
+
+    <!-- IMAGE CONTAINER -->
+    <div id="imagenNoCompletado"></div>
+
+    <div class="botones-resultado">
+      <button id="btnCompletado" class="small-btn" type="button">✅ Completado</button>
+      <button id="btnNoCompletado" class="small-btn" style="background:#f44336" type="button">❌ No completado</button>
+      <button id="btnCerrarResultados" class="small-btn" type="button" style="background: #444;">✖ Cerrar</button>
+    </div>
+  </div>
+
+  <!-- Audio elements -->
+  <audio id="ding" src="https://www.soundjay.com/buttons/sounds/bell-ringing-05.mp3" preload="auto"></audio>
+  <audio id="tic" src="https://www.soundjay.com/clock/sounds/clock-ticking-3.mp3" preload="auto"></audio>
+
+  <!-- Confetti library -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
+  <script>
+    // === ROULETTE DATA ===
+    const datos = {
+      ruleta1: "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""),
+      ruleta2: ["Nombre propio (Inicia con la letra)","Apellido (Inicia con la letra)","País (Inicia con la letra)","Ciudad (Inicia con la letra)","Capital (Inicia con la letra)","Departamento/Estado (Inicia con la letra)","Animal (Inicia con la letra)","Fruta (Inicia con la letra)","Verdura (Inicia con la letra)","Planta o flor (Inicia con la letra)","Árbol (Inicia con la letra)","Color (Contiene la letra)","Objeto (Inicia con la letra)","Profesión (Inicia con la letra)","Marca (Inicia con la letra)","Empresa (Inicia con la letra)","Comida (Inicia con la letra)","Bebida (Inicia con la letra)","Postre (Inicia con la letra)","Ingrediente de cocina (Inicia con la letra)","Parte del cuerpo (Contiene la letra)","Ropa (Inicia con la letra)","Calzado (Inicia con la letra)","Accesorio (Inicia con la letra)","Medio de transporte (Inicia con la letra)","Vehículo (Inicia con la letra)","Deporte (Inicia con la letra)","Instrumento musical (Inicia con la letra)","Cantante o grupo musical (Inicia con la letra)","Película (Inicia con la letra)","Serie de TV (Inicia con la letra)","Programa de TV (Inicia con la letra)","Libro (Inicia con la letra)","Personaje de libro (Inicia con la letra)","Personaje histórico (Inicia con la letra)","Personaje famoso (Inicia con la letra)","Superhéroe (Inicia con la letra)","Villano (Inicia con la letra)","Videojuego (Inicia con la letra)","Aplicación o red social (Inicia con la letra)","Página web (Inicia con la letra)","Palabra en inglés (Inicia con la letra)","Palabra en otro idioma (Inicia con la letra)","Adjetivo (Inicia con la letra)","Acción o verbo (Inicia con la letra)","Emoción o sentimiento (Contiene la letra)","Lugar turístico (Inicia con la letra)","Monumento famoso (Inicia con la letra)","Invento (Inicia con la letra)","Ciencia o rama del conocimiento (Inicia con la letra)","Símbolo o signo (Contiene la letra)","Animal marino (Inicia con la letra)","Ave (Inicia con la letra)","Insecto (Inicia con la letra)","País con mar (Inicia con la letra)","País sin mar (Inicia con la letra)","Isla (Inicia con la letra)","Montaña o volcán (Inicia con la letra)","Objeto tecnológico (Inicia con la letra)","Juguete (Inicia con la letra)","Planeta (Inicia con la letra)","Constelación (Inicia con la letra)","Estrella famosa (Inicia con la letra)","Satélite natural (Inicia con la letra)","Elemento químico (Inicia con la letra)","Metal (Inicia con la letra)","Gas (Inicia con la letra)","Mineral (Inicia con la letra)","Roca (Inicia con la letra)","Fósil (Inicia con la letra)","Dinosaurio (Inicia con la letra)","Mamífero (Inicia con la letra)","Reptil (Inicia con la letra)","Anfibio (Inicia con la letra)","Pez (Inicia con la letra)","Marsupial (Inicia con la letra)","Canino (Inicia con la letra)","Felino (Inicia con la letra)","Roedor (Inicia con la letra)","Primates (Inicia con la letra)","Mitología griega (Inicia con la letra)","Mitología romana (Inicia con la letra)","Mitología nórdica (Inicia con la letra)","Mitología egipcia (Inicia con la letra)","Dios (Inicia con la letra)","Diosa (Inicia con la letra)","Monstruo mitológico (Inicia con la letra)","Universidad (Inicia con la letra)","Colegio (Inicia con la letra)","Idioma (Inicia con la letra)","Dialecto (Inicia con la letra)","Género musical (Inicia con la letra)","Canción (Inicia con la letra)","Álbum musical (Inicia con la letra)","Festival de música (Inicia con la letra)","Premio musical (Inicia con la letra)","Instrumento de viento (Inicia con la letra)","Instrumento de cuerda (Inicia con la letra)","Instrumento de percusión (Inicia con la letra)","Ópera (Inicia con la letra)","Compositor clásico (Inicia con la letra)","Poema (Inicia con la letra)","Poeta (Inicia con la letra)","Novela (Inicia con la letra)","Cuento (Inicia con la letra)","Fábula (Inicia con la letra)","Obra de teatro (Inicia con la letra)","Tragedia (Inicia con la letra)","Comedia (Inicia con la letra)","Musical (Inicia con la letra)","Nombre de río extranjero (Inicia con letra)","Nombre de volcán famoso (Inicia con letra)","Playa reconocida (Inicia con letra)","Acrónimo famoso (Contiene letra)","Hashtag de tendencia (Contiene letra)","Nombre de mascota (Inicia con letra)","Apodo famoso (Inicia con letra)","Idioma inventado (Inicia con letra)","App viral (Inicia con letra)","Cuento infantil clásico (Inicia con letra)","Villano de película animada (Inicia con letra)","Nombre de un perfume (Inicia con letra)","Marca de automóvil (Inicia con letra)","Personaje de videojuego femenino (Inicia con letra)","Dibujo animado de los 90s (Inicia con letra)","Monstruo de videojuego (Inicia con letra)","Canción viral de TikTok (Inicia con letra)","Título de un reality show (Inicia con letra)","Aplicación de mensajería (Inicia con letra)","Celebridad de internet (Inicia con letra)","Animal mitológico latinoamericano (Inicia con letra)","Leyenda urbana de tu país (Inicia con letra)","Estrella de cine clásico (Inicia con letra)","Palabra inventada divertida (Inicia con letra)","Grupo de rock latino (Inicia con letra)","Marca de teléfono (Inicia con letra)","Podcast famoso (Inicia con letra)","Juego de mesa clásico (Inicia con letra)","Objeto que usas en la cocina (Contiene letra)","Objeto de oficina (Contiene letra)","Accesorio de moda (Contiene letra)","Animal acuático (Contiene letra)","Superhéroe de Marvel (Inicia con letra)","Superhéroe de DC (Inicia con letra)","Villano de cómic (Inicia con letra)","Youtuber de tecnología (Inicia con letra)","Streamer de Twitch (Inicia con letra)","Plato típico de Colombia (Inicia con letra)","Plato típico mexicano (Inicia con letra)","Bebida típica latinoamericana (Inicia con letra)","Serie animada japonesa (Inicia con letra)","Personaje de anime clásico (Inicia con letra)","K-Pop Idol (Inicia con letra)","Grupo de K-Pop (Inicia con letra)","Instrumento musical raro (Inicia con letra)","Evento histórico mundial (Inicia con letra)","Fenómeno natural extraño (Inicia con letra)","Objeto de la antigüedad (Inicia con letra)","Personaje de caricatura mexicana (Inicia con letra)","Villano de Disney (Inicia con letra)","Princesa de Disney (Inicia con letra)"],
+      ruleta3: ["1","2","3","4","5"]
+    };
+
+    // === GLOBAL VARIABLES ===
+    let historial = [];
+    let contadorHistorial = 1;
+    let countdownInterval = null;
+    let blinkInterval = null;
+
+    // === IMAGE CONFIGURATION ===
+    const totalImagenes = 92;
+    const carpetaImagenes = "No Completado";
+    const totalImagenesCompletado = 81;
+    const carpetaCompletado = "Completado";
+
+    // === ROULETTE FUNCTIONS ===
+    function crearRuleta(id, opciones, mostrarTexto = true) {
+      const ruleta = document.getElementById(id);
+      const num = opciones.length;
+      const paso = 360 / num;
+      let colores = opciones.map((_, i) => `hsl(${i*360/num}, 80%, 60%) ${i*paso}deg ${(i+1)*paso}deg`).join(", ");
+      ruleta.style.background = `conic-gradient(${colores})`;
+
+      if (mostrarTexto) {
+        opciones.forEach((texto, i) => {
+          const angulo = (i + 0.5) * paso;
+          const txt = document.createElement("div");
+          txt.className = "texto-segmento";
+          const radius = ruleta.offsetWidth / 2.5;
+          txt.style.transform = `rotate(${angulo}deg) translate(${radius}px) rotate(${-angulo}deg)`;
+          txt.textContent = texto;
+          ruleta.appendChild(txt);
+        });
+      }
+    }
+
+    function girar(id) {
+      const giros = Math.floor(Math.random() * 5) + 5;
+      const grados = giros * 360 + Math.floor(Math.random() * 360);
+      const ruleta = document.getElementById(id);
+      ruleta.style.transform = `translate(-50%, -50%) rotate(${grados}deg)`;
+      return grados;
+    }
+
+    function obtenerResultado(id, grados) {
+      const opciones = datos[id];
+      const paso = 360 / opciones.length;
+      const indice = Math.floor(((360 - (grados % 360)) % 360) / paso);
+      return opciones[indice];
+    }
+
+    function getTiempo(valor) {
+      switch (valor) {
+        case "1": return 10;
+        case "2": return 20;
+        case "3": return 35;
+        case "4": return 50;
+        case "5": return 60;
+        default: return 0;
+      }
+    }
+
+    function girarTodo() {
+      const g1 = girar("ruleta1");
+      const g2 = girar("ruleta2");
+      const g3 = girar("ruleta3");
+      safePlay('tic');
+      setTimeout(() => {
+        const resultados = {
+          ruleta1: obtenerResultado("ruleta1", g1),
+          ruleta2: obtenerResultado("ruleta2", g2),
+          ruleta3: obtenerResultado("ruleta3", g3)
+        };
+        mostrarResultados(resultados);
+      }, 4500);
+    }
+
+    function girarIndividual(id) {
+      const grados = girar(id);
+      safePlay('tic');
+      setTimeout(() => {
+        const r = obtenerResultado(id, grados);
+        const last = historial.length ? parseHistEntry(historial[0]) : {ruleta1: "-", ruleta2: "-", ruleta3: "-"};
+        const combinado = {
+          ruleta1: id === 'ruleta1' ? r : last.ruleta1,
+          ruleta2: id === 'ruleta2' ? r : last.ruleta2,
+          ruleta3: id === 'ruleta3' ? r : last.ruleta3
+        };
+        mostrarResultados(combinado);
+      }, 4500);
+    }
+
+    function parseHistEntry(text) {
+      const parts = text.split(':')[1] ? text.split(':')[1].trim().split(',') : ['-','-','-'];
+      return { ruleta1: parts[0] ? parts[0].trim() : '-', ruleta2: parts[1] ? parts[1].trim() : '-', ruleta3: parts[2] ? parts[2].trim() : '-' };
+    }
+
+    function safePlay(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      try { el.currentTime = 0; el.play().catch(()=>{}); } catch(e) {}
+    }
+
+    function actualizarHistorial() {
+      const lista = document.getElementById("listaHistorial");
+      if (!lista) return;
+      lista.innerHTML = "";
+      historial.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        lista.appendChild(li);
+      });
+    }
+
+    function toggleDropdown() {
+      const el = document.querySelector('#dropdownHistorial .dropdown-content');
+      if (el) {
+        el.style.display = el.style.display === "block" ? "none" : "block";
+      }
+    }
+
+    function mostrarResultados(resultados) {
+      limpiarTimers();
+      const modal = document.getElementById("resultadoModal");
+      modal.classList.add("mostrar");
+      modal.style.background = "white";
+      modal.style.color = "black";
+
+      document.getElementById("imagenNoCompletado").innerHTML = "";
+
+      const texto = `
+        <p><b>Ruleta 1:</b> ${resultados.ruleta1 ?? "-"}</p>
+        <p><b>Ruleta 2:</b> ${resultados.ruleta2 ?? "-"}</p>
+        <p><b>Ruleta 3:</b> ${resultados.ruleta3 ?? "-"}</p>
+      `;
+      document.getElementById("resultadoTexto").innerHTML = texto;
+
+      safePlay('ding');
+
+      if (typeof confetti === 'function') {
+        confetti({ particleCount: 200, spread: 100, origin: { y: 0.6 } });
+      }
+
+      const entry = `Resultado ${contadorHistorial}: ${resultados.ruleta1 ?? "-"}, ${resultados.ruleta2 ?? "-"}, ${resultados.ruleta3 ?? "-"}`;
+      historial.unshift(entry);
+      contadorHistorial++;
+      actualizarHistorial();
+
+      const tiempo = getTiempo(resultados.ruleta3);
+      if (tiempo > 0) {
+        let restante = tiempo;
+        const contadorElem = document.getElementById("temporizador");
+        contadorElem.textContent = `${restante} segundos restantes`;
+
+        countdownInterval = setInterval(() => {
+          restante--;
+          contadorElem.textContent = `${restante} segundos restantes`;
+
+          if (restante <= 3 && restante > 0) {
+            if (!blinkInterval) {
+              blinkInterval = setInterval(() => {
+                const curBg = modal.style.background || 'white';
+                if (curBg === 'red') {
+                  modal.style.background = 'white';
+                  modal.style.color = 'black';
+                } else {
+                  modal.style.background = 'red';
+                  modal.style.color = 'white';
+                }
+              }, 80);
+            }
+          }
+
+          if (restante <= 0) {
+            clearInterval(countdownInterval); countdownInterval = null;
+            if (blinkInterval) { clearInterval(blinkInterval); blinkInterval = null; }
+            modal.style.background = 'white';
+            modal.style.color = 'black';
+            contadorElem.textContent = '¡Tiempo terminado!';
+            safePlay('ding');
+          }
+        }, 1000);
+      } else {
+        document.getElementById("temporizador").textContent = "";
+      }
+    }
+
+    function limpiarTimers() {
+      if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+      if (blinkInterval) { clearInterval(blinkInterval); blinkInterval = null; }
+    }
+
+    function mostrarImagenAleatoria() {
+      const numeroImagen = Math.floor(Math.random() * totalImagenes) + 1;
+      const rutaImagen = encodeURI(`${carpetaImagenes}/${numeroImagen}.png`);
+      const contenedor = document.getElementById('imagenNoCompletado');
+
+      console.log(`Intentando cargar: ${rutaImagen}`);
+      contenedor.innerHTML = '<p class="loading-text">🔄 Cargando imagen...</p>';
+
+      const img = document.createElement('img');
+      img.src = rutaImagen;
+      img.alt = `No completado (imagen ${numeroImagen})`;
+      img.className = 'loading-image';
+
+      const timeoutId = setTimeout(() => {
+        if (!img.complete) {
+          contenedor.innerHTML = `<div class="error-message">⏰ Timeout cargando ${rutaImagen}</div>`;
+        }
+      }, 7000);
+
+      img.onload = function() {
+        clearTimeout(timeoutId);
+        img.classList.remove('loading-image');
+        contenedor.innerHTML = '';
+        contenedor.appendChild(img);
+        document.getElementById('resultadoModal').classList.add('mostrar');
+      };
+
+      img.onerror = function() {
+        clearTimeout(timeoutId);
+        contenedor.innerHTML = `<div class="error-message">❌ No se pudo cargar ${rutaImagen}<br>Comprueba que la carpeta exista.</div>`;
+      };
+    }
+
+    function mostrarImagenCompletado() {
+      const numeroImagen = Math.floor(Math.random() * totalImagenesCompletado) + 1;
+      const rutaImagen = encodeURI(`${carpetaCompletado}/${numeroImagen}.png`);
+      const contenedor = document.getElementById('imagenNoCompletado');
+
+      console.log(`Intentando cargar (Completado): ${rutaImagen}`);
+      contenedor.innerHTML = '<p class="loading-text">🔄 Cargando imagen de Completado...</p>';
+
+      const img = document.createElement('img');
+      img.src = rutaImagen;
+      img.alt = `Completado (imagen ${numeroImagen})`;
+      img.className = 'loading-image';
+
+      const timeoutId = setTimeout(() => {
+        if (!img.complete) {
+          contenedor.innerHTML = `<div class="error-message">⏰ Timeout cargando ${rutaImagen}</div>`;
+        }
+      }, 7000);
+
+      img.onload = function() {
+        clearTimeout(timeoutId);
+        img.classList.remove('loading-image');
+        contenedor.innerHTML = '';
+        contenedor.appendChild(img);
+        document.getElementById('resultadoModal').classList.add('mostrar');
+      };
+
+      img.onerror = function() {
+        clearTimeout(timeoutId);
+        contenedor.innerHTML = `<div class="error-message">❌ No se pudo cargar ${rutaImagen}<br>Comprueba que la carpeta exista.</div>`;
+      };
+    }
+
+    // === EVENT LISTENERS ===
+    document.addEventListener('DOMContentLoaded', () => {
+      crearRuleta("ruleta1", datos.ruleta1, true);
+      crearRuleta("ruleta2", datos.ruleta2, false);
+      crearRuleta("ruleta3", datos.ruleta3, true);
+
+      const btnCompletado = document.getElementById('btnCompletado');
+      const btnNoCompletado = document.getElementById('btnNoCompletado');
+      const btnCerrarResultados = document.getElementById('btnCerrarResultados');
+
+      if (btnCompletado) {
+        btnCompletado.addEventListener('click', () => {
+          console.log('✅ Botón "Completado" presionado');
+          mostrarImagenCompletado();
+        });
+      }
+
+      if (btnNoCompletado) {
+        btnNoCompletado.addEventListener('click', () => {
+          console.log('❌ Botón "No completado" presionado');
+          mostrarImagenAleatoria();
+        });
+      }
+
+      if (btnCerrarResultados) {
+        btnCerrarResultados.addEventListener('click', () => {
+          const modal = document.getElementById('resultadoModal');
+          modal.classList.remove('mostrar');
+          document.getElementById('imagenNoCompletado').innerHTML = '';
+          limpiarTimers();
+          console.log('✖ Modal de resultados cerrado.');
+        });
+      }
+
+      const btnHistorialImagenes = document.getElementById("btnHistorialImagenes");
+      const modalHistorial = document.getElementById("historialImagenesModal");
+      const cerrarHistorial = document.getElementById("cerrarHistorialImagenes");
+      
+      btnHistorialImagenes.addEventListener("click", () => modalHistorial.style.display = "block");
+      cerrarHistorial.addEventListener("click", () => modalHistorial.style.display = "none");
+      window.addEventListener("click", (e) => { if (e.target === modalHistorial) modalHistorial.style.display = "none"; });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === "Escape") {
+          const modal = document.getElementById('resultadoModal');
+          if (modal.classList.contains('mostrar')) {
+            modal.classList.remove('mostrar');
+            document.getElementById('imagenNoCompletado').innerHTML = '';
+            limpiarTimers();
+            console.log('Modal de resultados cerrado con ESC');
+          }
+        }
+      });
+
+      console.log(`🎯 Ruleta inicializada. Carpetas: "${carpetaImagenes}" y "${carpetaCompletado}"`);
+    });
+  </script>
+</body>
+</html>
