@@ -601,7 +601,7 @@
           restante--;
           contadorElem.textContent = `${restante} segundos restantes`;
 
-          if (restante <= 3 && restante > 0) {
+          if (restante <= 5 && restante > 0) {
             if (!blinkInterval) {
               blinkInterval = setInterval(() => {
                 const curBg = modal.style.background || 'white';
@@ -612,7 +612,7 @@
                   modal.style.background = 'red';
                   modal.style.color = 'white';
                 }
-              }, 1000);
+              }, 10000);
             }
           }
 
